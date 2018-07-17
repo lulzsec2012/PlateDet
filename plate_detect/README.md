@@ -65,11 +65,15 @@ set the number of gpus in ${plate_detect_ROOT}/config.py:
 ### Tesing
 
     ```
-    cd ${plate_detect_ROOT}/examples/
-    vim test.py
-    g_step = {the global step of ckpt}
-    image_path = {your_path}
-    python test.py
+    default:
+        cd ${plate_detect_ROOT}/examples/
+        python test.py
+    if you want to use your images and ckpt model to test:
+        cd ${plate_detect_ROOT}/examples/
+        vim test.py
+        g_step = {the global step of ckpt}
+        image_path = {your_path}
+        python test.py
     ```
 
 ### accuarcy

@@ -25,7 +25,8 @@ def network_arg_scope(
             weights_regularizer=slim.l2_regularizer(weight_decay),
             weights_initializer=slim.variance_scaling_initializer(),
             trainable=is_training,
-            activation_fn=tf.nn.relu6,
+            activation_fn=tf.nn.relu,
+            #activation_fn=tf.nn.relu6,
             normalizer_fn=slim.batch_norm,
             normalizer_params=batch_norm_params,
             padding='SAME'):

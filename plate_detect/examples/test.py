@@ -40,7 +40,8 @@ if size == 608:
 else:
     ckpt_dir = re.sub(r'examples/', '', cfg.ckpt_path_416)
 
-image_path = '/home/algdata/plate_from_JieGao/1'
+image_path = re.sub(r'examples', '', os.getcwd()) + 'data/test_data/'
+
 with tf.Session() as sess:
     configer = tf.ConfigProto()
     configer.gpu_options.per_process_gpu_memory_fraction = 0.999
