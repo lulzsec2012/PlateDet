@@ -3,12 +3,10 @@ This proj is organized as follows:
 ```
 plate_detect/
 ├── ckpt
-│   ├── ckpt_416
 │   └── ckpt_608
 ├── data
-│   ├── test_list
-│   ├── train_data
-│   └── train_list
+│   ├── test_data
+│   └── train_data
 ├── examples
 ├── models
 ├── prepare_data
@@ -24,34 +22,20 @@ data should be organized as follows:
 
 ```
 data/
-├── test_list
-│   └── test.txt
-├── train_data
-└── train_list
-    └── train.txt
+├── test_data
+│   ├── 9999388_20180205114702178_京ADA098_sp.jpg
+│   └── plate_detect_test.records
+└── train_data
+    └── plate_detect_train.records
 ```
-
-data format in train.txt:
-    image_path classes gt_box
-
-set the target path of train.records in ${plate_detect_ROOT}/config.py:
-
-    ```
-    cd ${plate_detect_ROOT};
-    vim config.py
-    cfg.data_path = {your_path}
-    ```
-
-generate train.records:
-
-    ```
-    cd ${plate_detect_ROOT}/preprare_data/
-    python gen_tf_records_fast.py
-    ```
 
 ### Training
 
-set the number of gpus in ${plate_detect_ROOT}/config.py:
+1. Download dataset:
+    cd ${plate_detect_ROOT}/data/train_data/
+    wget http://193.169.1.235/plate_detect_train.records
+
+2. set the number of gpus in ${plate_detect_ROOT}/config.py:
 
     ```
     cfg.train.num_gpus = {num_gpus}
@@ -64,6 +48,13 @@ set the number of gpus in ${plate_detect_ROOT}/config.py:
 
 ### Tesing
 
+1. Download checkpoint model:
+    cd ${plate_detect_ROOT}/ckpt/
+    wget http://193.169.1.235/plate_detect_original_model.zip
+    unzip plate_detect_original_model.zip
+    rm plate_detect_original_model.zip
+
+2.
     ```
     default:
         cd ${plate_detect_ROOT}/examples/
@@ -78,6 +69,11 @@ set the number of gpus in ${plate_detect_ROOT}/config.py:
 
 ### accuarcy
 
+1. Download test data:
+    cd ${plate_detect_ROOT}/data/test_data/
+    wget http://193.169.1.235/plate_detect_test.records
+
+2.
     ```
     cd ${plate_detect_ROOT}/examples/
     vim accuracy.py

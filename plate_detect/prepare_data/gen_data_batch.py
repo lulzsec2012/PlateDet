@@ -13,7 +13,8 @@ def parser(example):
     coord = feats['label_and_class']
     coord = tf.reshape(coord, [1, 5])
 
-    img = tf.decode_raw(feats['feature'], tf.float32)
+    img = tf.decode_raw(feats['feature'], tf.uint8)
+    img = tf.cast(img, tf.float32) / 255.0
     img = tf.reshape(img, [608, 608, 3])
     #img = tf.image.resize_images(img, [cfg.train.image_resized, cfg.train.image_resized])
     #temp = np.random.randint(320, 608)
@@ -39,6 +40,25 @@ def gen_data_batch(tf_records_filename, batch_size):
     imgs, true_boxes = iterator.get_next()
 
     return imgs, true_boxes
+
+def parser_test_data(tf_records_filename):
+    '''
+    load image and label from tf records
+    '''
+    input_queue = tf.train.string_input_producer([tf_records_filename], num_epochs=1, shuffle=False)
+    reader = tf.TFRecordReader()
+    key, value = reader.read(input_queue)
+
+    feats = tf.parse_single_example(value, features={'label' : tf.FixedLenFeature([4], tf.float32),
+                                                     'feature': tf.FixedLenFeature([], tf.string)})
+    coord = feats['label']
+    coord = tf.reshape(coord, [1, 4])
+
+    img = tf.decode_raw(feats['feature'], tf.uint8)
+    img = tf.cast(img, tf.float32) / 255.0
+    img = tf.reshape(img, [1, 1024, 2048, 3])
+
+    return img, coord
 
 if __name__ == '__main__':
     tf_records_filename = cfg.data_path

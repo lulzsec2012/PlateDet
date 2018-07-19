@@ -14,8 +14,8 @@ cfg.anchors = np.array([[50,20], [75,35], [100,50], [120,55], [150,60],
 cfg.names = ['plate']
 cfg.batch_size = 32
 
-cfg.data_path = '/network_c3s/tf_records/train.records'
 cnt_path = os.getcwd()
+cfg.data_path = cnt_path + '/data/train_data/train.records'
 cfg.ckpt_path = cnt_path + '/ckpt'
 cfg.ckpt_path_416 = cfg.ckpt_path + '/ckpt_416/'
 cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608/'

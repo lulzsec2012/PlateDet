@@ -51,9 +51,8 @@ def average_gradients(tower_grads):
 
 def train():
     is_training = True
-
     # data pipeline
-    imgs, true_boxes = gen_data_batch(cfg.data_path, cfg.batch_size*cfg.train.num_gpus)
+    imgs, true_boxes = gen_data_batch(re.sub(r'examples/', '', cfg.data_path), cfg.batch_size*cfg.train.num_gpus)
     imgs_split = tf.split(imgs, cfg.train.num_gpus)
     true_boxes_split = tf.split(true_boxes, cfg.train.num_gpus)
 

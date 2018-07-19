@@ -39,7 +39,7 @@ def extract_image(image_path, height, width, is_resize=True):
     if is_resize:
         print('is_resize')
         image = cv2.resize(image, (width, height))
-    image_data = np.array(image, dtype='float32') / 255.0
+    image_data = np.array(image, dtype='uint8')
     return image_data
 
 def run_encode(file_path, tf_records_filename):
