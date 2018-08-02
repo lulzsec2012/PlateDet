@@ -15,7 +15,7 @@ cfg.names = ['plate']
 cfg.batch_size = 32
 
 cnt_path = os.getcwd()
-cfg.data_path = cnt_path + '/data/train_data/train.records'
+cfg.data_path = '/mllib/dataset/PLATE_DET/data/train_data/plate_detect_train.records'
 cfg.ckpt_path = cnt_path + '/ckpt'
 cfg.ckpt_path_416 = cfg.ckpt_path + '/ckpt_416/'
 cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608/'

@@ -5,7 +5,8 @@ import numpy as np
 import tensorflow as tf
 import sys
 sys.path.append('..')
-from models.run_net import PDetNet
+sys.path.append('../models')
+from run_net import PDetNet
 from prepare_data.gen_data_batch import gen_data_batch
 from config import cfg
 import os
@@ -52,7 +53,7 @@ def average_gradients(tower_grads):
 def train():
     is_training = True
     # data pipeline
-    imgs, true_boxes = gen_data_batch(re.sub(r'examples/', '', cfg.data_path), cfg.batch_size*cfg.train.num_gpus)
+    imgs, true_boxes = gen_data_batch(cfg.data_path, cfg.batch_size*cfg.train.num_gpus) 
     imgs_split = tf.split(imgs, cfg.train.num_gpus)
     true_boxes_split = tf.split(true_boxes, cfg.train.num_gpus)
 
@@ -87,6 +88,8 @@ def train():
     # Create a saver
     saver = tf.train.Saver()
     ckpt_dir = re.sub(r'examples/', '', cfg.ckpt_path_608)
+    if not os.path.exists(ckpt_dir):
+        os.makedirs(ckpt_dir)
 
     # init
     sess.run(tf.global_variables_initializer())

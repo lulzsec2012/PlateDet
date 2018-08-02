@@ -5,13 +5,14 @@ import numpy as np
 import tensorflow as tf
 import sys
 sys.path.append('..')
-from models.run_net import PDetNet
+sys.path.append('../models')
+from run_net import PDetNet
 from prepare_data.gen_data_batch import gen_data_batch
 from config import cfg
 import cv2
 import os
 import re
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 dim_w = 2048
 dim_h = 1024
@@ -40,21 +41,24 @@ if size == 608:
 else:
     ckpt_dir = re.sub(r'examples/', '', cfg.ckpt_path_416)
 
-image_path = re.sub(r'examples', '', os.getcwd()) + 'data/test_data/'
+image_path = '/mllib/dataset/PLATE_DET/data/test_data/'
 
 with tf.Session() as sess:
     configer = tf.ConfigProto()
-    configer.gpu_options.per_process_gpu_memory_fraction = 0.999
+    # configer.gpu_options.per_process_gpu_memory_fraction = 0.999
+    configer.gpu_options.per_process_gpu_memory_fraction = 0.4
     sess=tf.Session(config=configer)
     ckpt = tf.train.get_checkpoint_state(ckpt_dir)
-    print(ckpt.model_checkpoint_path)
+    # print(ckpt.model_checkpoint_path)
     #saver.restore(sess, ckpt.model_checkpoint_path)
+    print(ckpt_dir+str(g_step)+'_plate.ckpt-'+str(g_step+1))
     saver.restore(sess, ckpt_dir+str(g_step)+'_plate.ckpt-'+str(g_step+1))
-
+    
     imgs = os.listdir(image_path)
     for i in imgs:
         if 'jpg' not in i:
-            continue
+            if 'png' not in i:
+                continue
         image_1 = cv2.imread(os.path.join(image_path, i))
         image = cv2.imread(os.path.join(image_path, i))
         image = cv2.resize(image, (1920, 1080))

@@ -4,9 +4,9 @@
 import tensorflow as tf
 import sys
 sys.path.append('..')
-from models.network import Network
+from network import Network
 from config import cfg
-from models.losses import plate_det, preprocess_true_boxes, confidence_loss, cord_cls_loss
+from losses import plate_det, preprocess_true_boxes, confidence_loss, cord_cls_loss
 
 class PDetNet:
     def __init__(self, img, truth, is_training, batcn_norm_decay=0.997):

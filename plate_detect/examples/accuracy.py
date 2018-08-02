@@ -5,7 +5,8 @@ import numpy as np
 import tensorflow as tf
 import sys
 sys.path.append('..')
-from models.run_net import PDetNet
+sys.path.append('../models')
+from run_net import PDetNet
 from prepare_data.gen_data_batch import parser_test_data
 from config import cfg
 import cv2
@@ -101,13 +102,13 @@ def accuracy(test_file):
                 print('done')
                 accuracy = float(correct) / float(correct + wrong)
                 recall = float(correct) / float(all_images)
-                print("All images:\n {}".format(all_images))
-                print("Accuracy: {:.4f}%".format(accuracy))
-                print("Recall: {:.4f}%".format(recall))
+                print("All images: {}".format(all_images))
+                print("Accuracy: {:.4f}".format(accuracy))
+                print("Recall: {:.4f}".format(recall))
             finally:
                 coord.request_stop()
             coord.join(threads)
 
 if __name__ == '__main__':
-    test_file = re.sub(r'examples', '', os.getcwd()) + 'data/test_data/test.records'
+    test_file = '/mllib/dataset/PLATE_DET/data/test_data/plate_detect_test.records'
     accuracy(test_file)
