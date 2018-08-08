@@ -78,7 +78,9 @@ def train():
                         vars_det = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope="PDetNet")
     grads = average_gradients(tower_grads)
     with tf.control_dependencies(update_op):
-        train_op = optimizer.minimize(loss, global_step=global_step, var_list=vars_det)
+        # train_op = optimizer.minimize(loss, global_step=global_step, var_list=vars_det)
+        apply_gradient_op = optimizer.apply_gradients(grads, global_step=global_step)
+        train_op = tf.group(apply_gradient_op,*update_op)
 
     # GPU config
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
@@ -93,7 +95,6 @@ def train():
 
     # init
     sess.run(tf.global_variables_initializer())
-
     # running
     for i in range(0, cfg.train.max_batches):
         _, loss_ = sess.run([train_op, current_loss])
