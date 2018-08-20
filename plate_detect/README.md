@@ -17,6 +17,10 @@ plate_detect/
     tensorflow-gpu>=1.5.1
     python3
 
+### Main Results
+    ######the accuracy of current version: 94.56% 
+    the current version: accuracy = 98.33%, recall = 99.31%
+
 ### Prepare data
 data should be organized as follows:
 

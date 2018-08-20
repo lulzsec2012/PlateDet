@@ -51,6 +51,7 @@ def accuracy(test_file):
     dim_h = 1024
     is_training = False
     g_step = 50000
+    print('g_step=',g_step)
     cfg.batch_size = 1
     size = 608
     t = 0.9
@@ -72,8 +73,10 @@ def accuracy(test_file):
         sess=tf.Session(config=configer)
         
         saver = tf.train.Saver()
+        # 先执行初始化工作 
         sess.run(tf.global_variables_initializer())
         saver.restore(sess, ckpt_dir+str(g_step)+'_plate.ckpt-'+str(g_step+1))
+        #这一行必须加,因为slice_input_producer的原因
         sess.run(tf.local_variables_initializer())
         print(ckpt_dir+str(g_step)+'_plate.ckpt-'+str(g_step+1))
 
@@ -81,7 +84,9 @@ def accuracy(test_file):
         wrong = 0
         all_images = 0
         with tf.Graph().as_default():
+            # 开启一个协调器  
             coord = tf.train.Coordinator()
+            # 使用start_queue_runners 启动队列填充  
             threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
             try:
@@ -98,6 +103,7 @@ def accuracy(test_file):
                             correct += 1
                         else:
                             wrong += 1
+            #如果读取到文件队列末尾会抛出此异常 
             except tf.errors.OutOfRangeError:
                 print('done')
                 accuracy = float(correct) / float(correct + wrong)
@@ -106,7 +112,9 @@ def accuracy(test_file):
                 print("Accuracy: {:.4f}".format(accuracy))
                 print("Recall: {:.4f}".format(recall))
             finally:
+                # 协调器coord发出所有线程终止信号
                 coord.request_stop()
+            #把开启的线程加入主线程,等待threads结束  
             coord.join(threads)
 
 if __name__ == '__main__':
