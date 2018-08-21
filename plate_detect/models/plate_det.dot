@@ -1,0 +1,257 @@
+ digraph G{
+        node[
+            shape="record"
+        ];
+
+         inputs [
+            label="{inputs|intputs:608*608*3}"
+        ];
+         conv0 [
+            label="{conv0|kernel:3*3\lstride:2\l|outputs:304*304*32\l}"
+        ];
+         pool1 [
+            label="{pool1|kernel:2*2\lstride:2\l|outputs:152*152*32\l}"
+        ];
+         conv2 [
+            label="{conv2|kernel:3*3\lstride:1\l|outputs:152*152*32\l}"
+        ];
+         conv3 [
+            label="{conv3|kernel:3*3\lstride:1\l|outputs:152*152*32\l}"
+        ];
+         route4 [
+            label="{route4|mothod:concat\l|outputs:152*152*96\l}"
+        ];
+         conv5 [
+            label="{conv5|kernel:3*3\lstride:2\l|outputs:76*76*32\l}"
+        ];
+         conv6 [
+            label="{conv6|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         conv7 [
+            label="{conv7|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         route8 [
+            label="{route8|mothod:concat\l|outputs:76*76*64\l}"
+        ];
+         conv9 [
+            label="{conv9|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         conv10 [
+            label="{conv10|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         route11 [
+            label="{route11|mothod:concat\l|outputs:76*76*64\l}"
+        ];
+         conv12 [
+            label="{conv12|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         conv13 [
+            label="{conv13|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         route14 [
+            label="{route14|mothod:concat\l|outputs:76*76*96\l}"
+        ];
+         conv15 [
+            label="{conv15|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         conv16 [
+            label="{conv16|kernel:3*3\lstride:1\l|outputs:76*76*32\l}"
+        ];
+         route17 [
+            label="{route17|mothod:concat\l|outputs:76*76*96\l}"
+        ];
+         conv18 [
+            label="{conv18|kernel:3*3\lstride:2\l|outputs:38*38*64\l}"
+        ];
+         conv19 [
+            label="{conv19|kernel:3*3\lstride:1\l|outputs:38*38*64\l}"
+        ];
+         conv20 [
+            label="{conv20|kernel:3*3\lstride:1\l|outputs:38*38*32\l}"
+        ];
+         route21 [
+            label="{route21|mothod:concat\l|outputs:38*38*96\l}"
+        ];
+         conv22 [
+            label="{conv22|kernel:3*3\lstride:1\l|outputs:38*38*64\l}"
+        ];
+         conv23 [
+            label="{conv23|kernel:3*3\lstride:1\l|outputs:38*38*32\l}"
+        ];
+	 route24 [
+            label="{route24|mothod:concat\l|outputs:38*38*64\l}"
+        ];
+         conv25 [
+            label="{conv25|kernel:3*3\lstride:1\l|outputs:38*38*64\l}"
+        ];
+         conv26 [
+            label="{conv26|kernel:3*3\lstride:1\l|outputs:38*38*32\l}"
+        ];
+         route27 [
+            label="{route27|mothod:concat\l|outputs:38*38*128\l}"
+        ];
+         conv28 [
+            label="{conv28|kernel:3*3\lstride:1\l|outputs:38*38*32\l}"
+        ];
+ 	 conv29 [
+            label="{conv29|kernel:3*3\lstride:1\l|outputs:38*38*32\l}"
+        ];
+         route30 [
+            label="{route30|mothod:concat\l|outputs:38*38*128\l}"
+        ];
+         conv31 [
+            label="{conv31|kernel:3*3\lstride:2\l|outputs:19*19*128\l}"
+        ];
+  	 conv32 [
+            label="{conv32|kernel:3*3\lstride:1\l|outputs:19*19*128\l}"
+        ];
+         conv33 [
+            label="{conv33|kernel:3*3\lstride:1\l|outputs:19*19*64\l}"
+        ];
+         route34 [
+            label="{route34|mothod:concat\l|outputs:19*19*192\l}"
+        ];
+  	 conv35 [
+            label="{conv35|kernel:3*3\lstride:1\l|outputs:19*19*128\l}"
+        ];
+         conv36 [
+            label="{conv36|kernel:3*3\lstride:1\l|outputs:19*19*64\l}"
+        ];
+         route37 [
+            label="{route37|mothod:concat\l|outputs:19*19*128\l}"
+        ];
+  	 conv38 [
+            label="{conv38|kernel:3*3\lstride:1\l|outputs:19*19*128\l}"
+        ];
+         conv39 [
+            label="{conv39|kernel:3*3\lstride:1\l|outputs:19*19*64\l}"
+        ];
+         route40 [
+            label="{route40|mothod:concat\l|outputs:19*19*256\l}"
+        ];
+  	 conv41 [
+            label="{conv41|kernel:3*3\lstride:1\l|outputs:19*19*128\l}"
+        ];
+         conv42 [
+            label="{conv42|kernel:3*3\lstride:1\l|outputs:19*19*64\l}"
+        ];
+         unpool43 [
+            label="{unpool43|mothod:concat\l|outputs:38*38*64\l}"
+        ];
+  	 unpool45 [
+            label="{unpool45|mothod:concat\l|outputs:38*38*64\l}"
+        ];
+         unpool47 [
+            label="{unpool47|mothod:concat\l|outputs:38*38*128\l}"
+        ];
+         route48 [
+            label="{route48|mothod:concat\l|outputs:38*38*384\l}"
+        ];
+  	 conv49 [
+            label="{conv49|kernel:3*3\lstride:1\l|outputs:38*38*128\l}"
+        ];
+         unpool50 [
+            label="{unpool50|mothod:concat\l|outputs:76*76*128\l}"
+        ];
+         route51 [
+            label="{route51|mothod:concat\l|outputs:76*76*224\l}"
+        ];
+  	 conv52 [
+            label="{conv52|kernel:3*3\lstride:1\l|outputs:76*76*64\l}"
+        ];
+         unpool53 [
+            label="{unpool53|mothod:concat\l|outputs:152*152*64\l}"
+        ];
+         route54 [
+            label="{route54|mothod:concat\l|outputs:152*152*128\l}"
+        ];
+  	 conv55 [
+            label="{conv55|kernel:3*3\lstride:1\l|outputs:152*152*54\l}"
+        ];
+         conv56 [
+            label="{conv56|kernel:3*3\lstride:1\l|outputs:152*152*54\l}"
+        ];
+	 inputs->conv0;
+	 conv0->pool1;
+	 pool1->conv2;
+	 pool1->route4;
+	 conv2->conv3;
+	 conv2->route4;
+	 conv2->route54;
+	 conv3->route4;
+	 conv3->route54;
+	 route4->conv5;
+	 conv5->conv6;
+	 conv5->route8;
+	 conv5->route14;
+	 conv5->route17;
+	 conv5->route51;
+	 conv6->conv7;
+	 conv7->route8;
+	 conv7->route11;
+	 route8->conv9;
+	 conv9->conv10;
+	 conv10->route11;
+	 conv10->route14;	
+         route11->conv12;
+	 conv12->conv13;
+	 conv13->route14;
+	 conv13->route17;
+	 conv13->route51;
+	 route14->conv15;
+         conv15->conv16;
+	 conv16->route17;
+	 conv16->route51;
+	 route17->conv18;
+	 conv18->conv19;
+	 conv18->route21;
+	 conv18->route27;
+	 conv18->route30;
+	 conv18->route48;
+	 conv19->conv20;
+	 conv20->route21;
+	 conv20->route24;
+	 route21->conv22;
+	 conv22->conv23;
+	 conv23->route24;
+	 conv23->route27;
+	 route24->conv25;
+	 conv25->conv26;
+	 conv26->route27;
+	 conv26->route30;
+	 conv26->route48;
+         route27->conv28;
+	 conv28->conv29;
+	 conv29->route30;
+	 conv29->route48;
+         route30->conv31;
+	 conv31->conv32;
+	 conv31->route34;
+	 conv31->route40;
+	 conv31->unpool47;
+	 conv32->conv33;
+	 conv33->route34;
+	 conv33->route37;
+	 route34->conv35;
+         conv35->conv36;
+	 conv36->route37;
+	 conv36->route40;
+	 route37->conv38;
+         conv38->conv39;
+	 conv39->route40;
+	 conv39->unpool45;
+         route40->conv41;
+	 conv41->conv42;
+	 conv42->unpool43;
+	 unpool43->route48;
+	 unpool45->route48;
+	 unpool47->route48;
+	 route48->conv49;
+	 conv49->unpool50;
+	 unpool50->route51;
+	 route51->conv52;
+	 conv52->unpool53;
+	 unpool53->route54;
+	 route54->conv55;
+	 conv55->conv56;
+}
