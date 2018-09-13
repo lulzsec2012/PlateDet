@@ -28,13 +28,17 @@ class PDetNet:
 
     def compute_loss(self):
         with tf.name_scope('loss_0'):
+            summaries = set()
             matching_true_boxes, detectors_mask, loc_scale = \
                     preprocess_true_boxes(self.truth, self.anchors, tf.shape(self.head), self.img_shape)
             objectness_loss = confidence_loss(self.pred_xy, self.pred_wh, self.pred_confidence, self.truth, detectors_mask)
+            summaries.add(tf.summary.scalar('objectness_loss', objectness_loss))
             cord_loss = cord_cls_loss(detectors_mask, matching_true_boxes, cfg.classes, \
                                 self.pred_class_prob, self.loc_txywh, loc_scale)
+            summaries.add(tf.summary.scalar('cord_loss', cord_loss))
+            summaries.add(tf.summary.scalar('self.l2_loss', self.l2_loss))
             self.loss = objectness_loss + cord_loss + self.l2_loss
-        return self.loss
+        return self.loss, summaries 
 
     def predict(self, img_hw, iou_threshold=0.5, score_threshold=0.5):
         '''

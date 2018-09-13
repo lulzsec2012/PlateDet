@@ -12,6 +12,38 @@ from config import cfg
 import os
 import re
 
+
+
+def summaries_gradients_hist(grads):
+    # Add histograms for gradients.
+    summaries = set()
+    for grad, var in grads: 
+        if grad is not None:
+            summaries.add(tf.summary.histogram(var.op.name + '/gradients', grad))
+            summaries.add(tf.summary.histogram(var.op.name, var))
+    return summaries
+
+
+def summaries_gradients_norm(grads):
+    summaries = set()
+    #gradients norm
+    g_norm = []
+    for g, v in grads:
+        if g is not None:
+            print(g.name)
+#            tmep_name = g.name.split("/")
+#           name = tmep_name[3]+ "/" + tmep_name[4] + "/" + tmep_name[5] + "/" + tmep_name[6] + "/norm"
+            gn = tf.norm(g, name=g.name.split(":")[0]+"/norm")
+            g_norm.append(gn)
+    for gn in g_norm:
+        if "BiasAdd_grad" not in gn.name.split("/") and "batchnorm" not in gn.name.split("/"):
+            summaries.add(tf.summary.scalar(gn.name, gn))
+    return summaries
+
+
+
+
+
 def average_gradients(tower_grads):
     """Calculate the average gradient for each shared variable across all towers.
 
@@ -68,13 +100,19 @@ def train():
 
     # Calculate the gradients for each model tower.
     tower_grads = []
+    losses = []
+    summaries = set()
+    summaries_buf = []
+
+    
     #tf.variable_scope(): 通过 tf.get_variable()为变量名指定命名空间.
     with tf.variable_scope(tf.get_variable_scope()):
         for i in range(cfg.train.num_gpus):
             with tf.device('/gpu:%d' % i):
                 with tf.name_scope('%s_%d' % (cfg.train.tower, i)) as scope:
                     model = PDetNet(imgs_split[i], true_boxes_split[i], is_training)
-                    loss = model.compute_loss()
+                    # loss = model.compute_loss()
+                    loss, loss_summ = model.compute_loss()
                     #当前变量作用域可以用tf.get_variable_scope()进行检索并且reuse 标签可以通过调用tf.get_variable_scope().reuse_variables()设置为True.
                     tf.get_variable_scope().reuse_variables()
                     #compute_gradients(loss,var_list=None,gate_gradients=GATE_OP,aggregation_method=None,colocate_gradients_with_ops=False,grad_loss=None)
@@ -87,7 +125,15 @@ def train():
                     # colocate_gradients_with_ops: If True, try colocating gradients with the corresponding op. 
                     # grad_loss: Optional. A Tensor holding the gradient computed for loss.
                     grads = optimizer.compute_gradients(loss)
+                    gradients_summ = summaries_gradients_norm(grads)
+                    gradients_hist = summaries_gradients_hist(grads)
+                    
                     tower_grads.append(grads)
+                    losses.append(loss)
+                    summaries_buf.append(loss_summ)
+                    # summaries_buf.append(gradients_summ)
+                    summaries_buf.append(gradients_hist)
+
                     if i == 0:
                         current_loss = loss
                         update_op = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -101,8 +147,15 @@ def train():
         # train_op = optimizer.minimize(loss, global_step=global_step, var_list=vars_det)
         apply_gradient_op = optimizer.apply_gradients(grads, global_step=global_step)
         #当这个op结点运行完成，所有作为input的ops都被运行完成
-        train_op = tf.group(apply_gradient_op,*update_op)
+        train_op = tf.group(apply_gradient_op,update_op)
 
+    for summ in summaries_buf:
+        summaries |= summ
+
+    summaries.add(tf.summary.scalar('lr', lr))
+    summary_op = tf.summary.merge(list(summaries), name='summary_op')
+
+        
     # GPU config
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     config.gpu_options.allow_growth = True
@@ -117,11 +170,16 @@ def train():
     # init
     #tf.global_variables_initializer()能够将所有的变量一步到位的初始化,非常的方便,将会初始化所有在tf.GraphKeys.GLOBAL_VARIABLES 中的变量.
     sess.run(tf.global_variables_initializer())
+    
+    if True:
+        summary_writer = tf.summary.FileWriter(logdir=ckpt_dir, graph=sess.graph)
     # running
     for i in range(0, cfg.train.max_batches):
-        _, loss_ = sess.run([train_op, current_loss])
+        _, loss_ , gstep, summary_var = sess.run([train_op, current_loss, global_step, summary_op])
         if(i % 100 == 0):
             print(i,': ', loss_)
+            # saver.save(sess, ckpt_dir+str(i)+'_plate.ckpt', global_step=global_step, write_meta_graph=False)
+            summary_writer.add_summary(summary_var, global_step=gstep)	
         if i % 1000 == 0 and i < 10000:
             saver.save(sess, ckpt_dir+str(i)+'_plate.ckpt', global_step=global_step, write_meta_graph=False)
         if i % 10000 == 0:
