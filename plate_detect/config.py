@@ -37,3 +37,24 @@ cfg.train.image_resized = 608
 cfg.train.num_gpus = 4
 cfg.train.tower = 'tower'
 
+cfg.train.pretrained = True
+cfg.train.restore_ckpt_path = '{CKPT_PATH}/60000_plate.ckpt-230004'
+cfg.train.is_quantize = True 
+
+cfg.quant = edict()
+
+cfg.quant.bitwidth = '4,2,32'
+
+cfg.quant.quant_layers_weight = True
+cfg.quant.quant_layers_weight_2bit = ''
+cfg.quant.quant_layers_weight_4bit = 'conv_0,conv_2,conv_3'
+cfg.quant.quant_layers_weight_8bit = ''
+
+cfg.quant.quant_layers_activation = True
+cfg.quant.quant_layers_activation_2bit = 'conv_38,conv_39,conv_41'
+cfg.quant.quant_layers_activation_4bit = ''
+cfg.quant.quant_layers_activation_8bit = ''
+
+# quant_layers_weight_optional = 'conv_0,conv_2,conv_3,conv_5,conv_6,conv_7,conv_9,conv_10,conv_12,conv_13,conv_15,conv_16,conv_18,conv_19,conv_20,conv_22,conv_23,conv_25,conv_26,conv_28,conv_29,conv_31,conv_32,conv_33,conv_35,conv_36,conv_38,conv_39,conv_41,conv_42,conv_49,conv_52,conv_55,conv_56'
+
+# quant_layers_activation_optional = 'conv_0,conv_2,conv_3,conv_5,conv_6,conv_7,conv_9,conv_10,conv_12,conv_13,conv_15,conv_16,conv_18,conv_19,conv_20,conv_22,conv_23,conv_25,conv_26,conv_28,conv_29,conv_31,conv_32,conv_33,conv_35,conv_36,conv_38,conv_39,conv_41,conv_42,conv_49,conv_52,conv_55'

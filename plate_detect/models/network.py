@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
+# File: network_quant.py
+# Author: shenhua Wu <shwu@ingenic.com>
+
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
@@ -8,6 +11,34 @@ import sys
 sys.path.append('..')
 import numpy as np
 from config import cfg
+from dorefa_jz import get_dorefa_jz
+from contextlib import contextmanager
+
+fw32, fw8, fw4, fw2 = None, None, None, None
+fa32, fa8, fa4, fa2 = None, None, None, None
+fw, fa, fw = None, None, None
+
+@contextmanager
+def custom_getter_scope(custom_getter):
+    scope = tf.get_variable_scope()
+    if False:
+        with tf.variable_scope(
+                scope, custom_getter=custom_getter,
+                auxiliary_name_scope=False):
+            yield
+    if True:
+        ns = tf.get_default_graph().get_name_scope()
+        with tf.variable_scope(
+                scope, custom_getter=custom_getter):
+            with tf.name_scope(ns + '/' if ns else ''):
+                yield
+
+def remap_variables(fn):
+    tf.python_io.tf_record_iterator
+    def custom_getter(getter, *args, **kwargs):
+        v = getter(*args, **kwargs)
+        return fn(v)
+    return custom_getter_scope(custom_getter)
 
 def network_arg_scope(
         is_training=True, weight_decay=cfg.train.weight_decay, batch_norm_decay=0.997,
@@ -40,7 +71,33 @@ class Network(object):
     def inference(self, mode, inputs, scope='PDetNet'):
         is_training = mode
         print(inputs)
-        with slim.arg_scope(network_arg_scope(is_training=is_training)):
+        if cfg.train.is_quantize:
+            global fw, fa
+            global fw32, fw8, fw4, fw2, fa32, fa8, fa4, fa2, fg
+            bitwidth = cfg.quant.bitwidth
+            bitwidth_ = bitwidth.split(",")
+            if fw2 == None:
+                fw32, fw8, fw4, fw2, fa32, fa8, fa4, fa2, fg = get_dorefa_jz()
+                fw = quant_weight(int(bitwidth_[0]))
+                fa = quant_activation(int(bitwidth_[1]))
+        #
+        def new_get_variable(v):
+            name = v.op.name
+            if not name.endswith('weights'):
+                return v
+            else:
+                if cfg.train.is_quantize:
+                    print(bitwidth,'_',name)
+                    if cfg.quant.quant_layers_weight:
+                        return quant_layers_weight(v)
+                    else:
+                        return fw(v)
+                else:
+                    return v
+
+        assert inputs != None
+        with slim.arg_scope(network_arg_scope(is_training=is_training)),\
+        remap_variables(new_get_variable):
             with tf.variable_scope(scope, reuse=False):
                 conv0 = conv2d(inputs, 32, 2, name='conv_0')
                 pool1 = maxpool2x2(conv0, name='pool_1')
@@ -106,7 +163,23 @@ class Network(object):
                     return conv56
 
 def conv2d(inputs, c_outputs, s, name):
-    output = slim.conv2d(inputs, num_outputs=c_outputs, kernel_size=[3,3], stride=s, scope=name)
+    num_filters = c_outputs
+    kernel_size = [3,3]
+    strides = s
+    # weights_initializer = tf.constant_initializer(__weights_dict[name]['weights'])
+    output = slim.convolution2d(inputs,
+                            # weights_initializer = weights_initializer,
+                            num_outputs = num_filters,
+                            kernel_size=kernel_size,
+                            stride=strides,
+                            scope=name)
+    if cfg.train.is_quantize:
+        if cfg.quant.quant_layers_activation:
+            output = quant_layers_activation(name,output)
+        else:
+            output = fa(output)
+        output = fg(output)
+    print('===============================')
     print(name, output.get_shape())
     return output
 
@@ -130,3 +203,51 @@ def unpool2x2(input, name):
         print(name, res.get_shape())
     return res
 
+def quant_layers_weight(v):
+    quant_layers_weight_2bit = cfg.quant.quant_layers_weight_2bit.split(",")
+    quant_layers_weight_4bit = cfg.quant.quant_layers_weight_4bit.split(",")
+    quant_layers_weight_8bit = cfg.quant.quant_layers_weight_8bit.split(",")
+    conv = v.op.name.split("/")[-2]
+    if   conv in quant_layers_weight_2bit:
+        return fw2(v)
+    elif conv in quant_layers_weight_4bit:
+        return fw4(v)
+    elif conv in quant_layers_weight_8bit:
+        return fw8(v)
+    else:
+        return fw(v)
+
+def quant_layers_activation(name,output):
+    quant_layers_activation_2bit = cfg.quant.quant_layers_activation_2bit.split(",")
+    quant_layers_activation_4bit = cfg.quant.quant_layers_activation_4bit.split(",")
+    quant_layers_activation_8bit = cfg.quant.quant_layers_activation_8bit.split(",")
+    if   name in quant_layers_activation_2bit:
+        return fa2(output)
+    elif name in quant_layers_activation_4bit:
+        return fa4(output)
+    elif name in quant_layers_activation_8bit:
+        return fa8(output)
+    else:
+        return fa(output)
+
+def quant_weight(bitW):
+    if   bitW == 8:
+        fw = fw8
+    elif bitW == 4:
+        fw = fw4
+    elif bitW == 2:
+        fw = fw2
+    else:
+        fw = fw32
+    return fw
+
+def quant_activation(bitA):
+    if   bitA == 8:
+        fa = fa8
+    elif bitA == 4:
+        fa = fa4
+    elif bitA == 2:
+        fa = fa2
+    else:
+        fa = fa32
+    return fa
