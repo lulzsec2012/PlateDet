@@ -5,7 +5,9 @@ import numpy as np
 import tensorflow as tf
 import sys
 sys.path.append('..')
-from models.run_net import PDetNet
+#from models.run_net import PDetNet
+from tensorflow.contrib.model_pruning.PlateDet.plate_detect.models.run_net import PDetNet
+from tensorflow.contrib.model_pruning.python import pruning
 from prepare_data.gen_data_batch import parser_test_data
 from config import cfg
 import cv2
@@ -53,7 +55,7 @@ def accuracy(test_file):
     cfg.batch_size = 1
     size = 608
     t = 0.9
-
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:cfg.ckpt_path_608:",cfg.ckpt_path_608)
     if size == 608:
         ckpt_dir = re.sub(r'examples/', '', cfg.ckpt_path_608)
     else:
@@ -72,7 +74,8 @@ def accuracy(test_file):
         
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
-        saver.restore(sess, ckpt_dir+str(g_step)+'_plate.ckpt-'+str(g_step+1))
+        #saver.restore(sess, ckpt_dir+str(g_step)+'_plate.ckpt-'+str(g_step+1))
+        saver.restore(sess, cfg.train.eval_ckpt)
         sess.run(tf.local_variables_initializer())
         print(ckpt_dir+str(g_step)+'_plate.ckpt-'+str(g_step+1))
 
@@ -109,5 +112,5 @@ def accuracy(test_file):
             coord.join(threads)
 
 if __name__ == '__main__':
-    test_file = re.sub(r'examples', '', os.getcwd()) + 'data/test_data/test.records'
+    test_file = re.sub(r'examples', '', os.getcwd()) + '/data/plate_detect_test.records'
     accuracy(test_file)

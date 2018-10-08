@@ -7,40 +7,139 @@ from tensorflow.python.framework import ops
 import sys
 sys.path.append('..')
 import numpy as np
-from config import cfg
+#from config import cfg
+from tensorflow.contrib.model_pruning.PlateDet.plate_detect.config import cfg
+
+from dorefa import get_dorefa
+fw = None
+fa = None
+fg = None
+from tensorflow.contrib.model_pruning.python import pruning
+
+from contextlib import contextmanager
+@contextmanager
+def custom_getter_scope(custom_getter):
+    scope = tf.get_variable_scope()
+    if False:
+        with tf.variable_scope(
+                scope, custom_getter=custom_getter,
+                auxiliary_name_scope=False):
+            yield
+    if True:
+        ns = tf.get_default_graph().get_name_scope()
+        with tf.variable_scope(
+                scope, custom_getter=custom_getter):
+            with tf.name_scope(ns + '/' if ns else ''):
+                yield
+
+def remap_variables(fn):
+    tf.python_io.tf_record_iterator
+    def custom_getter(getter, *args, **kwargs):
+        v = getter(*args, **kwargs)
+        return fn(v)
+    return custom_getter_scope(custom_getter)
+
 
 def network_arg_scope(
         is_training=True, weight_decay=cfg.train.weight_decay, batch_norm_decay=0.997,
         batch_norm_epsilon=1e-5, batch_norm_scale=False):
+    ##batch_norm_params = {
+    ##    'is_training': is_training, 'decay': batch_norm_decay,
+    ##    'epsilon': batch_norm_epsilon, 'scale': batch_norm_scale,
+    ##    'updates_collections': ops.GraphKeys.UPDATE_OPS,
+    ##    #'variables_collections': [ tf.GraphKeys.TRAINABLE_VARIABLES ],
+    ##    'trainable': cfg.train.bn_training,
+    ##}
+    #
     batch_norm_params = {
-        'is_training': is_training, 'decay': batch_norm_decay,
-        'epsilon': batch_norm_epsilon, 'scale': batch_norm_scale,
-        'updates_collections': ops.GraphKeys.UPDATE_OPS,
-        #'variables_collections': [ tf.GraphKeys.TRAINABLE_VARIABLES ],
-        'trainable': cfg.train.bn_training,
+      'decay': 0.995,
+      'epsilon': 0.001,
+      'scale': False,
+      'center':False,
+      'updates_collections':tf.GraphKeys.UPDATE_OPS,
+      'variables_collections':tf.GraphKeys.TRAINABLE_VARIABLES,
+      'is_training': is_training,
+      'activation_fn': tf.nn.relu6
     }
+    
+    #
+    @slim.add_arg_scope
+    def _batch_norm(inputs,
+               decay=0.999,
+               center=True,
+               scale=False,
+               epsilon=0.001,
+               activation_fn=None,
+               param_initializers=None,
+               param_regularizers=None,
+               updates_collections=tf.GraphKeys.UPDATE_OPS,
+               is_training=True,
+               reuse=None,
+               variables_collections=None,
+               outputs_collections=None,
+               trainable=True,
+               batch_weights=None,
+               fused=None,
+               data_format='NHWC',
+               zero_debias_moving_mean=False,
+               scope=None,
+               renorm=False,
+               renorm_clipping=None,
+               renorm_decay=0.99,
+               adjustment=None):
+        print("_batch_norm:center:",center)
+        print("_batch_norm:scale :",scale)
+        bn_with_scale_false = slim.batch_norm(inputs,decay,False,False,epsilon,activation_fn,param_initializers,param_regularizers,updates_collections,is_training,reuse,
+               variables_collections,outputs_collections,trainable,batch_weights,fused,data_format,zero_debias_moving_mean,scope,renorm,renorm_clipping,renorm_decay,adjustment)
+        with tf.variable_scope('XBatchNorm') as scbn:
+            gamma = slim.model_variable('gamma', shape=[inputs.shape[-1]], initializer=tf.ones_initializer(),regularizer=slim.l1_regularizer(0.0001))#slim.l1_regularizer!!!
+            beta  = slim.model_variable('beta', shape=[inputs.shape[-1]], initializer=tf.zeros_initializer())
+        bn = tf.multiply(bn_with_scale_false,pruning.apply_mask(gamma, scbn))
+        bn = tf.add(bn,beta)
+        return bn
+    #
 
     with slim.arg_scope(
             [slim.conv2d],
             weights_regularizer=slim.l2_regularizer(weight_decay),
             weights_initializer=slim.variance_scaling_initializer(),
             trainable=is_training,
-            activation_fn=tf.nn.relu,
-            #activation_fn=tf.nn.relu6,
-            normalizer_fn=slim.batch_norm,
+            #activation_fn=tf.nn.relu,
+            activation_fn=tf.nn.relu6,
+            #normalizer_fn=slim.batch_norm,
+            normalizer_fn=_batch_norm,
             normalizer_params=batch_norm_params,
             padding='SAME'):
-        with slim.arg_scope([slim.batch_norm], **batch_norm_params) as arg_sc:
+        #with slim.arg_scope([slim.batch_norm,_batch_norm], **batch_norm_params) as arg_sc:
+        with slim.arg_scope([_batch_norm], **batch_norm_params) as arg_sc:
             return arg_sc
 
 class Network(object):
     def __init__(self):
-        pass
+        self._bitwidth=cfg.quant.bitwidth
+        self._is_quantize=cfg.quant.is_quantize
+        print("XXXXXXXXX:is_quantize:",self._is_quantize)
+        if self._is_quantize == 1:
+            global fw,fa,fg
+            bitwidth_ = self._bitwidth.split(",")
+            if fw == None:
+                print(bitwidth_)
+                fw, fa, fg = get_dorefa(int(bitwidth_[0]), int(bitwidth_[1]), int(bitwidth_[2]))
 
     def inference(self, mode, inputs, scope='PDetNet'):
         is_training = mode
         print(inputs)
-        with slim.arg_scope(network_arg_scope(is_training=is_training)):
+        def new_get_variable(v):
+            name = v.op.name
+            if not name.endswith('weights'):
+                return v
+            else:
+                if self._is_quantize:
+                    return fw(v)
+                else:
+                    return v
+
+        with slim.arg_scope(network_arg_scope(is_training=is_training)),remap_variables(new_get_variable):
             with tf.variable_scope(scope, reuse=False):
                 conv0 = conv2d(inputs, 32, 2, name='conv_0')
                 pool1 = maxpool2x2(conv0, name='pool_1')
