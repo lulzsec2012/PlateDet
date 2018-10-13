@@ -7,7 +7,8 @@ sys.path.append('..')
 #from models.network import Network
 from tensorflow.contrib.model_pruning.PlateDet.plate_detect.models.network import Network
 
-from config import cfg
+#from config import cfg
+from tensorflow.contrib.model_pruning.PlateDet.plate_detect.config import cfg
 from models.losses import plate_det, preprocess_true_boxes, confidence_loss, cord_cls_loss
 
 class PDetNet:

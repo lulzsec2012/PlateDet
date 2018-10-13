@@ -18,13 +18,17 @@ cnt_path = os.getcwd()
 cfg.data_path = cnt_path + '/data/plate_detect_train.records'
 cfg.ckpt_path = cnt_path + '/ckpt'
 cfg.ckpt_path_416 = cfg.ckpt_path + '/ckpt_416/'
-cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608_full/'
+#cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608_full/'
 #cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608_pruning_0.5/'
+#cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608_8bit/'
+#cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608_4bit/'
+cfg.ckpt_path_608 = cfg.ckpt_path + '/ckpt_608_2bit/'
 
 # training options
 cfg.train = edict()
 #cfg.train.eval_ckpt=cfg.ckpt_path_608+'30000_plate.ckpt-90002'
-cfg.train.eval_ckpt=cfg.ckpt_path_608+'60000_plate.ckpt-60001'
+#cfg.train.eval_ckpt=cfg.ckpt_path_608+'60000_plate.ckpt-60001'
+cfg.train.eval_ckpt=cfg.ckpt_path_608+'20000_plate.ckpt-180004'
 cfg.train.ignore_thresh = .5
 cfg.train.momentum = 0.9
 cfg.train.bn_training = True
@@ -33,10 +37,13 @@ cfg.train.weight_decay = 0.0005
 #cfg.train.learning_rate = [1e-3, 1e-4, 1e-5]
 #cfg.train.lr_steps = [40000., 50000.]
 cfg.train.fine_tune = 1
-cfg.train.rstd_path = cfg.ckpt_path + '/ckpt_608_full/60000_plate.ckpt-60001'
-cfg.train.max_batches = 40010
-cfg.train.learning_rate = [1e-4,1e-5,1e-5]
-cfg.train.lr_steps = [80000., 90000.]
+#cfg.train.rstd_path = cfg.ckpt_path + '/ckpt_608_pruning_0.5/40000_plate.ckpt-100002'
+#cfg.train.rstd_path = cfg.ckpt_path + '/ckpt_608_8bit/60000_plate.ckpt-160003'
+cfg.train.rstd_path = cfg.ckpt_path + '/ckpt_608_4bit/60000_plate.ckpt-220004'
+
+cfg.train.max_batches = 60010
+cfg.train.learning_rate = [1e-3,1e-4,1e-5]
+cfg.train.lr_steps = [260000., 270000.]
 
 cfg.train.lr_scales = [.1, .1]
 cfg.train.max_truth = 1
@@ -48,8 +55,17 @@ cfg.train.tower = 'tower'
 
 # quant options
 cfg.quant = edict()
-cfg.quant.bitwidth = "8,8,32"
-cfg.quant.is_quantize = 0
+cfg.quant.default_bitwidth = "2,2,32"
+cfg.quant.is_quantize = 1
+cfg.quant.is_vary_bits = 0
+cfg.quant.layers_weight_full=''
+cfg.quant.layers_weight_8bit=''
+cfg.quant.layers_weight_4bit=''
+cfg.quant.layers_weight_2bit=''
+cfg.quant.layers_activation_full=''
+cfg.quant.layers_activation_8bit=''
+cfg.quant.layers_activation_4bit=''
+cfg.quant.layers_activation_2bit=''
 
 # summary options
 cfg.summary = edict()

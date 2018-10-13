@@ -100,10 +100,14 @@ def train():
                     tf.get_variable_scope().reuse_variables()
                     grads_and_vars = optimizer.compute_gradients(loss)
                     #
-                    gradients_summ = summaries_gradients_norm(grads_and_vars)
+                    gradients_norm = summaries_gradients_norm(grads_and_vars)
                     gradients_hist = summaries_gradients_hist(grads_and_vars)
-                    #summaries_buf.append(gradients_summ)
+                    #summaries_buf.append(gradients_norm)
                     summaries_buf.append(gradients_hist)
+                    ##sum_set = set()
+                    ##sum_set.add(tf.summary.scalar("loss", loss))
+                    ##summaries_buf.append(sum_set)
+                    summaries_buf.append({tf.summary.scalar("loss", loss)})
                     #
                     tower_grads.append(grads_and_vars)
                     if i == 0:

@@ -15,7 +15,71 @@ fw = None
 fa = None
 fg = None
 from tensorflow.contrib.model_pruning.python import pruning
+quant_tool = None
+class Quant(object):
+    def __init__(self):
+        self._bitwidth=cfg.quant.default_bitwidth
+        self._is_quantize=cfg.quant.is_quantize
+        self._is_vary_bits=cfg.quant.is_vary_bits
+        print("XXXXXXXXX:is_quantize:",self._is_quantize)
+        if self._is_quantize == 1:
+            global fw,fa,fg
+            bitwidth_ = self._bitwidth.split(",")
+            if fw == None:
+                print(bitwidth_)
+                self.fwu, self.fau, self.fgu = get_dorefa(int(bitwidth_[0]), int(bitwidth_[1]), int(bitwidth_[2]))
+                fw, fa, fg = self.fwu, self.fau, self.fgu
+                self.fw32, self.fa32, self.fg32 = get_dorefa(8,8,16)#16 is useless
+                self.fw8,  self.fa8,  self.fg8  = get_dorefa(8,8,8)
+                self.fw4,  self.fa4,  self.fg4  = get_dorefa(4,4,4)
+                self.fw2,  self.fa2,  self.fg2  = get_dorefa(2,2,2)
 
+    def quant_weight_vary_layers(v):
+        layers_weight_full = cfg.quant.layers_weight_full.split(",")
+        layers_weight_8bit = cfg.quant.layers_weight_8bit.split(",")
+        layers_weight_4bit = cfg.quant.layers_weight_4bit.split(",")
+        layers_weight_2bit = cfg.quant.layers_weight_2bit.split(",")
+        conv = v.op.name.split("/")[-2]
+        if   conv in layers_weight_2bit:
+            print('*****************fw2')
+            return self.fw2(v)
+        elif conv in layers_weight_4bit:
+            print('*****************fw4')
+            return self.fw4(v)
+        elif conv in layers_weight_8bit:
+            print('*****************fw8')
+            return self.fw8(v)
+        elif conv in layers_weight_full:
+            print('*****************fw32')
+            return self.fw32(v)
+        else:
+            print('*****************fw')
+            return self.fwu(v)
+
+    def quant_activation_vary_layers(name,output):
+        layers_activation_full = cfg.quant.layers_activation_full.split(",")
+        layers_activation_8bit = cfg.quant.layers_activation_8bit.split(",")
+        layers_activation_4bit = cfg.quant.layers_activation_4bit.split(",")
+        layers_activation_2bit = cfg.quant.layers_activation_2bit.split(",")
+        if   name in layers_activation_2bit:
+            print('*****************fu2')
+            return self.fa2(output)
+        elif name in layers_activation_4bit:
+            print('*****************fu4')
+            return self.fa4(output)
+        elif name in layers_activation_8bit:
+            print('*****************fu8')
+            return self.fa8(output)
+        elif name in layers_activation_full:
+            print('*****************fu32')
+            return self.fa32(output)
+        else:
+            print('*****************fu')
+            return self.fau(output)
+
+#
+quant_tool = Quant()
+        
 from contextlib import contextmanager
 @contextmanager
 def custom_getter_scope(custom_getter):
@@ -116,15 +180,9 @@ def network_arg_scope(
 
 class Network(object):
     def __init__(self):
-        self._bitwidth=cfg.quant.bitwidth
+        self._bitwidth=cfg.quant.default_bitwidth
         self._is_quantize=cfg.quant.is_quantize
-        print("XXXXXXXXX:is_quantize:",self._is_quantize)
-        if self._is_quantize == 1:
-            global fw,fa,fg
-            bitwidth_ = self._bitwidth.split(",")
-            if fw == None:
-                print(bitwidth_)
-                fw, fa, fg = get_dorefa(int(bitwidth_[0]), int(bitwidth_[1]), int(bitwidth_[2]))
+        self._is_vary_bits=cfg.quant.is_vary_bits
 
     def inference(self, mode, inputs, scope='PDetNet'):
         is_training = mode
@@ -135,7 +193,10 @@ class Network(object):
                 return v
             else:
                 if self._is_quantize:
-                    return fw(v)
+                    if self._is_vary_bits:
+                        return quant_tool.quant_weight_vary_layers(v)
+                    else:
+                        return quant_tool.fwu(v)
                 else:
                     return v
 
@@ -206,6 +267,13 @@ class Network(object):
 
 def conv2d(inputs, c_outputs, s, name):
     output = slim.conv2d(inputs, num_outputs=c_outputs, kernel_size=[3,3], stride=s, scope=name)
+    if cfg.quant.is_quantize:
+        if cfg.quant.is_vary_bits:
+            output = quant_tool.quant_activation_vary_layers(name,output)
+        else:
+            output = quant_tool.fau(output)
+        output = quant_tool.fgu(output)
+        
     print(name, output.get_shape())
     return output
 
